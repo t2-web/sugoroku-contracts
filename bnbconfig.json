@@ -1,0 +1,27 @@
+{
+  "name": "SUGOROKU",
+  "description": "Fully on-chain dice board game on BNB Smart Chain",
+  "website": "https://sugorok.planz.tech/",
+  "primaryChain": {
+    "name": "BNB Smart Chain Mainnet",
+    "chainId": 56,
+    "rpc": "https://bsc-dataseed.bnbchain.org",
+    "explorer": "https://bscscan.com"
+  },
+  "contracts": {
+    "56": {
+      "GameRegistry": "0x6C7e284BACfD075afA6211ae9FCAef57E764A9eb",
+      "GameBoardGoblin": "0x1F65f2E6B5dBb787eC4b2c11322c88bAB8B65e8A",
+      "GameBoardSlime": "0x58122163D9a03754ffea62db2aD70E3Fbb372f91",
+      "GameBoardOrc": "0xDaBb5ad69F6645A2EfcEf125165BbCbfddb70ECa",
+      "GameBoardDragon": "0x0c9377e5450647A32067e072Bc8270c1cD6E3b47",
+      "DiceNFT": "0x4110022035579e6D2905010948236343A4335aAE",
+      "DiceNFTRedeemer": "0x6d8D7D9d85224Bcd9eb5dfEd6fA5edA85D64A259",
+      "GenesisAdventurer": "0x1C312e8F1018e55dc6de6362133e799025697619",
+      "SummonDiceClaim": "0x5956FD764c29f570BA9Cba183cB0133e2deef177",
+      "PlayerProgressSBT": "0x39c4A8ccE648A37cA0BB2c544bD86A1E5484fe20",
+      "GoalNftPrizes": "0xe9144e53811118da7003436351a4f57BFf59DE4E",
+      "GamePriceOracle": "0xE9bfe8529f48C970903411Fe38585cA4Fae455E5"
+    }
+  }
+}

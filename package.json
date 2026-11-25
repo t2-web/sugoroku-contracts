@@ -1,0 +1,17 @@
+{
+  "name": "sugoroku-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart contracts of SUGOROKU, a fully on-chain dice board game on BNB Smart Chain",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile"
+  },
+  "devDependencies": {
+    "hardhat": "2.28.6"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "@openzeppelin/contracts-upgradeable": "5.4.0"
+  }
+}
