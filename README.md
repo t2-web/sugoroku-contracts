@@ -66,7 +66,7 @@ Each arena has its own in-game token and AMM pool, deployed by the GameRegistry 
 | GameToken beacon | 0x19E66E063D6C11521e35F4C2ECc49196077c2b63 | OpenZeppelin `UpgradeableBeacon` |
 | SugorokuAMMPool (implementation) | 0x8a92c6c47fcFf281FB836AD7bf55F30E5B53C482 | `contracts/SugorokuAMMPool.sol` |
 | AMM pool beacon | 0xcb9519666d87afa688039B3850Be2fd618A1Fd43 | OpenZeppelin `UpgradeableBeacon` |
-| DiceNFT (implementation) | 0xC73dF7323EAD6aAC57C748bD89AFB9796cb854Af | `contracts/DiceNFT.sol` |
+| DiceNFT (implementation) | 0xC0d8F12c92b4E7B0304240246C0Cae91b47706aE | `contracts/DiceNFT.sol` |
 | DiceNFTRedeemer (implementation) | 0x234e14266089c2688E5de3384886125908cc11A7 | `contracts/DiceNFTRedeemer.sol` |
 | GenesisAdventurer (implementation) | 0x11D74ed6543C75C1ff01729ADcd586B7E6B8D2D8 | `contracts/GenesisAdventurer.sol` |
 | SummonDiceClaim (implementation) | 0x43045F7deB89C38733BDFD5AA84c9a992541612E | `contracts/SummonDiceClaim.sol` |

@@ -88,6 +88,7 @@ contract DiceNFT is
     error DiceAlreadyRegistered(uint256 id);
     error BoardAlreadyRegistered(address board, uint256 id);
     error EmptyName();
+    error EmptyBatch();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -186,6 +187,34 @@ contract DiceNFT is
             amounts[1] = amountsByRecipient[i][1];
             amounts[2] = amountsByRecipient[i][2];
             _mintBatch(recipients[i], ids, amounts, "");
+        }
+
+        emit BatchDiceSeedMinted(msg.sender, recipients);
+    }
+
+    /**
+     * @notice Mint any registered ids (Dragon, id 4, included) to many users in one admin call.
+     * @dev Same shape and event as `adminBatchMintToMultiple`, with the ids given by the caller
+     *      instead of the fixed 1/2/3. The per-recipient amounts go to `_mintBatch` unchanged:
+     *      each recipient gets one `TransferBatch` with its ids and amounts, or one `TransferSingle`
+     *      when `ids` has a single entry (OpenZeppelin's ERC-1155 picks the event by length).
+     * @param recipients Wallets to receive dice.
+     * @param ids Registered token ids, the same for every recipient (e.g. [1, 2, 3, 4]).
+     * @param amountsByRecipient For each wallet, one amount per entry of `ids` (zero allowed).
+     */
+    function adminBatchMintIds(
+        address[] calldata recipients,
+        uint256[] calldata ids,
+        uint256[][] calldata amountsByRecipient
+    ) external onlyOwner {
+        if (recipients.length == 0 || ids.length == 0) revert EmptyBatch();
+        if (recipients.length != amountsByRecipient.length) revert ArrayLengthMismatch();
+
+        _validateDiceIds(ids);
+        for (uint256 i = 0; i < recipients.length; i++) {
+            _validateRecipient(recipients[i]);
+            if (amountsByRecipient[i].length != ids.length) revert ArrayLengthMismatch();
+            _mintBatch(recipients[i], ids, amountsByRecipient[i], "");
         }
 
         emit BatchDiceSeedMinted(msg.sender, recipients);
