@@ -132,7 +132,7 @@ contract SugorokuGameBoard is Initializable, AccessControlUpgradeable, PausableU
     // ========================================================================
 
     /// @notice Contract version for upgrade compatibility
-    uint256 public constant CONTRACT_VERSION = 13;
+    uint256 public constant CONTRACT_VERSION = 14;
 
     /// @notice BSC BEP-440 history contract for block hashes older than 256 blocks
     address private constant BLOCK_HASH_HISTORY = 0x0000F90827F1C53a10cb7A02335B175320002935;
@@ -809,6 +809,7 @@ contract SugorokuGameBoard is Initializable, AccessControlUpgradeable, PausableU
     error NoDiceLeft();
     error RoundNotCompleted();
     error RoundAlreadyCompleted();
+    /// @dev No longer thrown since V14 (#766); kept in the ABI so reverts of older boards decode.
     error NoBalanceToWithdraw();
     error ClaimGracePeriodNotExpired(address player, uint256 claimDeadline, uint256 currentTime);
     error InvalidDicePrice(uint256 expected, uint256 actual);
@@ -1573,9 +1574,9 @@ contract SugorokuGameBoard is Initializable, AccessControlUpgradeable, PausableU
                 0xffffffffffffffffffffffffffffffffffffffff
             )
         }
-        if (sgpBalance == 0 && goalBonus == 0 && nftPrize == address(0)) {
-            revert NoBalanceToWithdraw();
-        }
+        // V14 (#766): nothing to pay is not a reason to refuse. A player on free dice who
+        // never won and reached the goal with an empty treasury could otherwise never leave
+        // (no buy, no rejoin, a slot held for good). Every payout below skips a zero.
 
         // Stored before the reset, for the event and the leaderboard
         uint256 totalEarned = playerData.totalSgpEarned;
@@ -1622,12 +1623,6 @@ contract SugorokuGameBoard is Initializable, AccessControlUpgradeable, PausableU
             emit GoalBonusPaid(player, goalBonus);
         }
 
-        // Sends the NFT from the prize wallet; a failed send becomes an open claim there
-        // and does not revert the exit.
-        if (nftPrize != address(0)) {
-            IGoalNftPrizes(nftPrize).deliver(player);
-        }
-
         emit GameExited(
             player,
             sgpBalance,
@@ -1635,6 +1630,13 @@ contract SugorokuGameBoard is Initializable, AccessControlUpgradeable, PausableU
             totalEarned,
             forced ? "auto_claimed" : "round_completed"
         );
+
+        // Sends the NFT from the prize wallet; a failed send becomes an open claim there
+        // and does not revert the exit. After GameExited (V14, #767): the send calls the
+        // winner's hook, and anything it does (a rejoin) must log after the exit.
+        if (nftPrize != address(0)) {
+            IGoalNftPrizes(nftPrize).deliver(player);
+        }
         EXIT_LOCK.asBoolean().tstore(false);
     }
 

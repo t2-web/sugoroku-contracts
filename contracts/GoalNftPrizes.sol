@@ -55,6 +55,9 @@ contract GoalNftPrizes is
     /// @notice Most prize kinds one board can stock. Bounds the walk in `reserve` (4 kinds per slot).
     uint256 public constant MAX_STOCK_KINDS = 32;
 
+    /// @notice Implementation version: 2 adds the send test on stocking (#767); version 1 had no getter.
+    uint256 private constant VERSION = 2;
+
     /// @dev Gas each vault check in `reserve` gets; `reserve` needs RESERVE_MIN_GAS left to make them.
     uint256 private constant CHECK_GAS = 50_000;
     uint256 private constant RESERVE_MIN_GAS = 3 * CHECK_GAS;
@@ -143,6 +146,13 @@ contract GoalNftPrizes is
     error ClaimNotOpen(uint256 claimId);
     /// @notice `reserve` was left too little gas for its vault checks
     error InsufficientGas();
+    /// @notice The vault holds and approved the prize, but the token refuses to move it (e.g. a
+    ///         soulbound DiceNFT while the vault is not on its transfer whitelist)
+    error VaultCannotSend(uint256 prizeId);
+    /// @notice `probeVaultSend` is only for this contract's own calls
+    error OnlySelf();
+    /// @dev Thrown by `probeVaultSend` after a successful test send, so that send is undone
+    error SendProbeOk();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -269,6 +279,10 @@ contract GoalNftPrizes is
         c.state = ClaimState.Cancelled;
         _closeOpen(claimId);
         if (restock) {
+            // V2 (#767): the same checks as addStock. The unit is still outstanding, so the vault
+            // must hold it; a unit it cannot send would only turn later NFT wins into redraws.
+            if (!isBoard[c.board]) revert UnknownBoard(c.board);
+            _requireSendable(c.prizeId, _prizes[c.prizeId], _prizes[c.prizeId].outstanding);
             _addToStock(c.board, c.prizeId, 1);
         } else {
             --_prizes[c.prizeId].outstanding;
@@ -353,16 +367,7 @@ contract GoalNftPrizes is
         Prize storage p = _prize(prizeId);
         uint256 outstanding = p.outstanding + amount;
         if (outstanding > type(uint32).max) revert VaultShort(prizeId, outstanding);
-        address vault_ = vault;
-        if (p.standard == STANDARD_ERC721) {
-            if (outstanding > 1 || IERC721(p.token).ownerOf(p.tokenId) != vault_) {
-                revert VaultShort(prizeId, outstanding);
-            }
-        } else if (IERC1155(p.token).balanceOf(vault_, p.tokenId) < outstanding) {
-            revert VaultShort(prizeId, outstanding);
-        }
-        // IERC721 and IERC1155 share the isApprovedForAll(address,address) selector.
-        if (!IERC721(p.token).isApprovedForAll(vault_, address(this))) revert VaultNotApproved();
+        _requireSendable(prizeId, p, outstanding);
         _addToStock(board, prizeId, amount);
         p.outstanding = uint32(outstanding);
     }
@@ -393,6 +398,39 @@ contract GoalNftPrizes is
     // ========================================================================
     // VIEWS
     // ========================================================================
+
+    function version() external pure returns (uint256) {
+        return VERSION;
+    }
+
+    /**
+     * @notice Whether the vault can send one unit of the prize right now: it holds and approved
+     *         it, and the token lets it move (a test send that is undone). Changes nothing; meant
+     *         for eth_call.
+     */
+    function canSend(uint256 prizeId) external returns (bool) {
+        Prize storage p = _prize(prizeId);
+        return _vaultCanSend(p.token, p.standard, p.tokenId) && _sendProbe(prizeId);
+    }
+
+    /**
+     * @notice Moves one unit of the prize from the vault to the vault, then reverts with
+     *         SendProbeOk, so nothing changes. Only callable by this contract (see `_sendProbe`).
+     */
+    function probeVaultSend(uint256 prizeId) external {
+        if (msg.sender != address(this)) revert OnlySelf();
+        Prize storage p = _prizes[prizeId];
+        address vault_ = vault;
+        // The same gas cap as the send at exit (`_trySend`), but only an approximation of it: a
+        // vault-to-vault move costs less than a first delivery to an empty winner account (new
+        // balance slot), so a token near the cap can pass here and still open a claim at exit.
+        if (p.standard == STANDARD_ERC721) {
+            IERC721(p.token).safeTransferFrom{ gas: SEND_GAS }(vault_, vault_, p.tokenId);
+        } else {
+            IERC1155(p.token).safeTransferFrom{ gas: SEND_GAS }(vault_, vault_, p.tokenId, 1, "");
+        }
+        revert SendProbeOk();
+    }
 
     function prizeCount() external view returns (uint256) {
         return _prizes.length;
@@ -487,6 +525,33 @@ contract GoalNftPrizes is
         _openIndex[last] = index + 1;
         _openClaims.pop();
         delete _openIndex[claimId];
+    }
+
+    /**
+     * @dev Reverts unless the vault holds `outstanding` units of the prize (one ERC-721 token at
+     *      most), approved this contract, and the token lets the vault send it (#767: a
+     *      soulbound token can refuse the send while holding and approval both pass).
+     */
+    function _requireSendable(uint256 prizeId, Prize storage p, uint256 outstanding) private {
+        address vault_ = vault;
+        if (p.standard == STANDARD_ERC721) {
+            if (outstanding > 1 || IERC721(p.token).ownerOf(p.tokenId) != vault_) {
+                revert VaultShort(prizeId, outstanding);
+            }
+        } else if (IERC1155(p.token).balanceOf(vault_, p.tokenId) < outstanding) {
+            revert VaultShort(prizeId, outstanding);
+        }
+        // IERC721 and IERC1155 share the isApprovedForAll(address,address) selector.
+        if (!IERC721(p.token).isApprovedForAll(vault_, address(this))) revert VaultNotApproved();
+        if (!_sendProbe(prizeId)) revert VaultCannotSend(prizeId);
+    }
+
+    /// @dev True when `probeVaultSend` got as far as its own SendProbeOk revert (it never succeeds).
+    function _sendProbe(uint256 prizeId) private returns (bool) {
+        (bool success, bytes memory reason) = address(this).call(
+            abi.encodeCall(this.probeVaultSend, (prizeId))
+        );
+        return !success && reason.length == 4 && bytes4(reason) == SendProbeOk.selector;
     }
 
     /// @dev Callers account for the units in Prize.outstanding.

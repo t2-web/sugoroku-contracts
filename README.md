@@ -58,20 +58,20 @@ Each arena has its own in-game token and AMM pool, deployed by the GameRegistry 
 |---|---|---|
 | SugorokuGameRegistry (implementation) | 0xc2526F217D9B737071B9DD6D0ab01F04c65eA135 | `contracts/SugorokuGameRegistry.sol` |
 | GameEconomyLib (linked by the registry) | 0xC1cDB6c96818e92d51860aAEE64f97ee5a765495 | `contracts/libraries/GameEconomyLib.sol` |
-| SugorokuGameBoard (implementation) | 0x95207b40A86727B39D73a49178F58C40E265da35 | `contracts/SugorokuGameBoard.sol` |
-| LeaderboardLib (linked by the board) | 0x954d86e3dDF77235b15ddB6C7A1d2e52CC53E765 | `contracts/libraries/LeaderboardLib.sol` |
-| GoalRewardLib (linked by the board) | 0xc0a42A3E260c280d832C6c3594Ba73d44A0cD2d4 | `contracts/libraries/GoalRewardLib.sol` |
+| SugorokuGameBoard (implementation) | 0x5177196bDBA96B028a60202b13D786120De4B9a4 | `contracts/SugorokuGameBoard.sol` |
+| LeaderboardLib (linked by the board) | 0xCDAdf038FcDF9D5B1E996F4b0b52e446A2C40428 | `contracts/libraries/LeaderboardLib.sol` |
+| GoalRewardLib (linked by the board) | 0x8F2D5C256A043764288fC6a48E4C605c5053736C | `contracts/libraries/GoalRewardLib.sol` |
 | GameBoard beacon | 0xaD1667C535D8A1964CFE098CcD3350d402068D9E | OpenZeppelin `UpgradeableBeacon` |
 | GameToken (implementation) | 0x4494ADA0435E7b6DcB8276C331dDB4742EFEF0AC | `contracts/GameToken.sol` |
 | GameToken beacon | 0x19E66E063D6C11521e35F4C2ECc49196077c2b63 | OpenZeppelin `UpgradeableBeacon` |
 | SugorokuAMMPool (implementation) | 0x8a92c6c47fcFf281FB836AD7bf55F30E5B53C482 | `contracts/SugorokuAMMPool.sol` |
 | AMM pool beacon | 0xcb9519666d87afa688039B3850Be2fd618A1Fd43 | OpenZeppelin `UpgradeableBeacon` |
-| DiceNFT (implementation) | 0xC0d8F12c92b4E7B0304240246C0Cae91b47706aE | `contracts/DiceNFT.sol` |
+| DiceNFT (implementation) | 0xa628AC1f86918DC865821d19f875328A4c00354d | `contracts/DiceNFT.sol` |
 | DiceNFTRedeemer (implementation) | 0x234e14266089c2688E5de3384886125908cc11A7 | `contracts/DiceNFTRedeemer.sol` |
 | GenesisAdventurer (implementation) | 0x11D74ed6543C75C1ff01729ADcd586B7E6B8D2D8 | `contracts/GenesisAdventurer.sol` |
 | SummonDiceClaim (implementation) | 0x43045F7deB89C38733BDFD5AA84c9a992541612E | `contracts/SummonDiceClaim.sol` |
 | PlayerProgressSBTUpgradeable (implementation) | 0xC04bB0e52Ae5864741745De02EE4658f7680cC88 | `contracts/PlayerProgressSBTUpgradeable.sol` |
-| GoalNftPrizes (implementation) | 0x016498C5b93f9c17b814E99706EE52F5A31adf7e | `contracts/GoalNftPrizes.sol` |
+| GoalNftPrizes (implementation) | 0x9714b725ca5B60cB3274e6cfdf6B59BBC071E9D0 | `contracts/GoalNftPrizes.sol` |
 | GamePriceOracle (implementation) | 0x87b0fA63424dF833B78A1C61FDF4ec55A50Af1C2 | `contracts/GamePriceOracle.sol` |
 
 SUGOROKU has no token for sale. Each arena has its own in-game token, used inside the arena's pool; players never need to hold it, and they deposit and withdraw only USDC.

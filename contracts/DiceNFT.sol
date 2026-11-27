@@ -273,6 +273,20 @@ contract DiceNFT is
         _safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
+    /**
+     * @notice The collection's name, which explorers and wallets read by convention: ERC-1155 has no
+     *         `name()`, and without one BscScan labels the collection "BEP-1155". A constant, so the
+     *         upgrade that adds it stores nothing. Each id's own name stays in `diceInfo(id)` and `uri(id)`.
+     */
+    function name() external pure returns (string memory) {
+        return "SUGOROKU Dice NFT";
+    }
+
+    /// @notice The collection's ticker symbol, read by explorers and wallets like `name()`.
+    function symbol() external pure returns (string memory) {
+        return "DICE";
+    }
+
     /// @notice The arena of a token id; a zero board means the id is not registered.
     function diceInfo(uint256 id) external view returns (DiceInfo memory) {
         return _diceInfo[id];

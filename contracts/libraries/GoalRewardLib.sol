@@ -15,7 +15,7 @@ interface IGoalNftPrizes {
 
     function deliver(address player) external;
 
-    function totalStock(address board) external view returns (uint256);
+    function isBoard(address board) external view returns (bool);
 }
 
 /**
@@ -170,8 +170,11 @@ library GoalRewardLib {
             (nftWeight != 0 && prize == address(0))
         ) revert InvalidGoalOdds();
         // Every goal that draws the NFT calls the prize contract, so a wrong address would make
-        // those moves revert. This view call fails unless it is a GoalNftPrizes.
-        if (prize != address(0)) IGoalNftPrizes(prize).totalStock(address(this));
+        // those moves revert, and a pool that does not list this board could never stock it.
+        // V14 (#767): it must list this board (V13 only probed totalStock, which any pool answers).
+        if (prize != address(0) && !IGoalNftPrizes(prize).isBoard(address(this))) {
+            revert InvalidGoalOdds();
+        }
 
         if (total == 0) stored = [uint256(0), 0, 0, 0];
         _store(GOAL_ODDS_SLOT, stored[0] | (total == 0 ? 0 : 1));
